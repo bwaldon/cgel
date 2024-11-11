@@ -53,7 +53,7 @@ def chunks(inF):
         else:
             chunk += ln
 
-def load(inF):
+def load(inF, correct_cgel_labels=True):
     """Given export data in the provided file, iteratively load each tree
     as a CGEL Tree object."""
 
@@ -80,13 +80,14 @@ def load(inF):
             assert i.startswith('#')
             i = int(i[1:])
             if i==root: continue
-            assert cat_func.count('-')==1,(cat_func,' '.join(tln.split('\t')[0] for tln in terms))
-            cat, func = cat_func.split('-')
-            cat = cat.replace("Clauserel","Clause_rel").replace("Npro","N_pro").replace("Vaux","V_aux")
+            assert cat_func.count('-')<3 and cat_func.count('-')>0,(cat_func,' '.join(tln.split('\t')[0] for tln in terms))
+            cat, func = cat_func.split('-', 1)
             if '.' in cat:
                 cat, label = cat.split('.')
                 cat = label + ' / ' + cat
-            func = func.replace("DetHead","Det-Head").replace("ModHead","Mod-Head").replace("MarkerHead","Marker-Head").replace("HeadPrenucleus","Head-Prenucleus").replace("PCComp","PredComp/Comp")
+            if correct_cgel_labels:
+                cat = cat.replace("Clauserel","Clause_rel").replace("Npro","N_pro").replace("Vaux","V_aux")
+                func = func.replace("DetHead","Det-Head").replace("ModHead","Mod-Head").replace("MarkerHead","Marker-Head").replace("HeadPrenucleus","Head-Prenucleus").replace("PCComp","PredComp/Comp")
             head = int(head)
             if head==root: head = 0
             nodes[i] = (None, func, cat, i, head)
@@ -96,15 +97,16 @@ def load(inF):
         for i,ln in enumerate(terms, start=1):
             w, _, cat_func, _, _, head = ln.split('\t')
             w = w.replace("++"," ")
-            cat, func = cat_func.split('-')
-            cat = cat.replace("Clauserel","Clause_rel").replace("Npro","N_pro").replace("Vaux","V_aux")
+            cat, func = cat_func.split('-', 1)
             if cat.startswith('GAP'):
                 assert w=='_.'
                 w = None
             if '.' in cat:
                 cat, label = cat.split('.')
                 cat = label + ' / ' + cat
-            func = func.replace("DetHead","Det-Head").replace("ModHead","Mod-Head").replace("MarkerHead","Marker-Head").replace("HeadPrenucleus","Head-Prenucleus").replace("PCComp","PredComp/Comp")
+            if correct_cgel_labels:
+                cat = cat.replace("Clauserel","Clause_rel").replace("Npro","N_pro").replace("Vaux","V_aux")
+                func = func.replace("DetHead","Det-Head").replace("ModHead","Mod-Head").replace("MarkerHead","Marker-Head").replace("HeadPrenucleus","Head-Prenucleus").replace("PCComp","PredComp/Comp")
             head = int(head)
             if head==root: head = 0
             nodes[i] = (w, func, cat, i, head)
